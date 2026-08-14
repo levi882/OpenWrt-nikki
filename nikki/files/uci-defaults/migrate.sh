@@ -229,6 +229,13 @@ log_scheduled_clear_size_limit_unit=$(uci -q get nikki.log.scheduled_clear_size_
 
 config_clear_at_stop=$(uci -q get nikki.log.clear_at_stop); [ -z "$config_clear_at_stop" ] && uci set nikki.log.clear_at_stop=1
 
+# since v1.26.2
+
+proxy_china_ip_auto_update=$(uci -q get nikki.proxy.china_ip_auto_update); [ -z "$proxy_china_ip_auto_update" ] && uci set nikki.proxy.china_ip_auto_update=0
+proxy_china_ip_update_cron=$(uci -q get nikki.proxy.china_ip_update_cron); [ -z "$proxy_china_ip_update_cron" ] && uci set nikki.proxy.china_ip_update_cron="0 4 * * *"
+proxy_china_ip_url=$(uci -q get nikki.proxy.china_ip_url); [ -z "$proxy_china_ip_url" ] && uci set nikki.proxy.china_ip_url="https://ispip.clang.cn/all_cn.txt"
+proxy_china_ip6_url=$(uci -q get nikki.proxy.china_ip6_url); [ -z "$proxy_china_ip6_url" ] && uci set nikki.proxy.china_ip6_url="https://ispip.clang.cn/all_cn_ipv6.txt"
+
 # commit
 uci commit nikki
 

@@ -62,6 +62,12 @@ const methods = {
 			return { success: success };
 		}
 	},
+	update_china_ip: {
+		call: function() {
+			const success = system(['service', 'nikki', 'update_china_ip']) == 0;
+			return { success: success };
+		}
+	},
 	api: {
 		args: { method: 'method', path: 'path', query: 'query', body: 'body' },
 		call: function(req) {

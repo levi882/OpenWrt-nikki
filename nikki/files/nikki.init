@@ -9,6 +9,7 @@ PROG="/usr/bin/mihomo"
 . "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
 extra_command 'update_subscription' 'Update subscription by section id'
+extra_command 'update_china_ip' 'Update China mainland IP lists'
 extra_command 'clear_logs' 'Clear logs if size exceeds the limit'
 
 boot_func() {
@@ -108,12 +109,14 @@ start_service() {
 	config_get tproxy_listener_name "core" "tproxy_listener_name"
 	config_get tun_listener_name "core" "tun_listener_name"
 	## proxy config
-	local proxy_enabled ipv4_dns_hijack ipv6_dns_hijack tcp_mode udp_mode
+	local proxy_enabled ipv4_dns_hijack ipv6_dns_hijack tcp_mode udp_mode china_ip_auto_update china_ip_update_cron
 	config_get_bool proxy_enabled "proxy" "enabled" 0
 	config_get_bool ipv4_dns_hijack "proxy" "ipv4_dns_hijack" 0
 	config_get_bool ipv6_dns_hijack "proxy" "ipv6_dns_hijack" 0
 	config_get tcp_mode "proxy" "tcp_mode"
 	config_get udp_mode "proxy" "udp_mode"
+	config_get_bool china_ip_auto_update "proxy" "china_ip_auto_update" 0
+	config_get china_ip_update_cron "proxy" "china_ip_update_cron"
 	## log config
 	local log_scheduled_clear log_scheduled_clear_cron
 	config_get_bool log_scheduled_clear "log" "scheduled_clear" 0
@@ -283,6 +286,11 @@ start_service() {
 	if [ "$log_scheduled_clear" = 1 ] && [ -n "$log_scheduled_clear_cron" ]; then
 		log "App" "Set log scheduled clear."
 		echo "$log_scheduled_clear_cron /etc/init.d/nikki clear_logs #nikki log scheduled clear" >> "/etc/crontabs/root"
+		reload_cron=1
+	fi
+	if [ "$china_ip_auto_update" = 1 ] && [ -n "$china_ip_update_cron" ]; then
+		log "App" "Set China mainland IP list auto update."
+		echo "$china_ip_update_cron /etc/init.d/nikki update_china_ip #nikki china ip auto update" >> "/etc/crontabs/root"
 		reload_cron=1
 	fi
 	if [ "$reload_cron" = 1 ]; then
@@ -499,6 +507,10 @@ cleanup() {
 	# delete cron
 	sed -i "/#nikki/d" "/etc/crontabs/root" > /dev/null 2>&1
 	/etc/init.d/cron restart
+}
+
+update_china_ip() {
+	"$CHINA_IP_UPDATE_SH"
 }
 
 clear_logs() {

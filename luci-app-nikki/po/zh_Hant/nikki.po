@@ -83,6 +83,10 @@ msgstr "追加規則"
 msgid "Append Rule Provider"
 msgstr "追加規則提供者"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:180
+msgid "Auto Update China Mainland IP"
+msgstr "自動更新中國大陸 IP"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:517
 msgid "Behavior"
 msgstr "行為"
@@ -114,6 +118,18 @@ msgstr "繞過 FWMark"
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:93
 msgid "CGroup"
 msgstr "控制群組"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:183
+msgid "China Mainland IP Update Cron"
+msgstr "中國大陸 IP 更新 Cron"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:188
+msgid "China Mainland IPv4 URL"
+msgstr "中國大陸 IPv4 URL"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:193
+msgid "China Mainland IPv6 URL"
+msgstr "中國大陸 IPv6 URL"
 
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/editor.js:29
 msgid "Choose File"
@@ -655,6 +671,11 @@ msgstr ""
 msgid "Open Dashboard"
 msgstr "開啟儀表板"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:191
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:196
+msgid "Only HTTPS URLs serving one CIDR per line are supported."
+msgstr "僅支援每行一個 CIDR 的 HTTPS URL。"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:52
 msgid "Outbound Interface"
 msgstr "出站介面"
@@ -1082,13 +1103,25 @@ msgstr "更新"
 msgid "Update At"
 msgstr "更新時間"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:200
+msgid "Update China Mainland IP"
+msgstr "更新中國大陸 IP"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/app.js:83
 msgid "Update Dashboard"
 msgstr "更新儀表板"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:204
+msgid "Update failed. Check the application log for details."
+msgstr "更新失敗，請查看應用程式日誌了解詳情。"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:524
 msgid "Update Interval"
 msgstr "更新間隔"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:204
+msgid "Update successful."
+msgstr "更新成功。"
 
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/profile.js:20
 msgid "Upload Profile"

@@ -19,6 +19,7 @@ Transparent Proxy with Mihomo on OpenWrt.
 - Profile Mixin
 - Profile Editor
 - Scheduled Restart
+- Manual and scheduled China mainland IP list updates
 
 ## Install & Update
 

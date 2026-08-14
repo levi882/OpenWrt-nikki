@@ -83,6 +83,10 @@ msgstr "Добавить правило"
 msgid "Append Rule Provider"
 msgstr "Добавить список правил"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:180
+msgid "Auto Update China Mainland IP"
+msgstr "Автообновление IP материкового Китая"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:517
 msgid "Behavior"
 msgstr "Поведение"
@@ -114,6 +118,18 @@ msgstr "Обход FWMark"
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:93
 msgid "CGroup"
 msgstr "CGroup"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:183
+msgid "China Mainland IP Update Cron"
+msgstr "Cron обновления IP материкового Китая"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:188
+msgid "China Mainland IPv4 URL"
+msgstr "URL IPv4 материкового Китая"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:193
+msgid "China Mainland IPv6 URL"
+msgstr "URL IPv6 материкового Китая"
 
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/editor.js:29
 msgid "Choose File"
@@ -655,6 +671,11 @@ msgstr ""
 msgid "Open Dashboard"
 msgstr "Открыть панель"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:191
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:196
+msgid "Only HTTPS URLs serving one CIDR per line are supported."
+msgstr "Поддерживаются только HTTPS URL с одним CIDR в строке."
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:52
 msgid "Outbound Interface"
 msgstr "Исходящий интерфейс"
@@ -1082,13 +1103,25 @@ msgstr "Обновить"
 msgid "Update At"
 msgstr "Обновлено"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:200
+msgid "Update China Mainland IP"
+msgstr "Обновить IP материкового Китая"
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/app.js:83
 msgid "Update Dashboard"
 msgstr "Обновить панель"
 
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:204
+msgid "Update failed. Check the application log for details."
+msgstr "Ошибка обновления. Подробности смотрите в журнале приложения."
+
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/mixin.js:524
 msgid "Update Interval"
 msgstr "Интервал обновления"
+
+#: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/proxy.js:204
+msgid "Update successful."
+msgstr "Обновление выполнено."
 
 #: applications/luci-app-nikki/htdocs/luci-static/resources/view/nikki/profile.js:20
 msgid "Upload Profile"

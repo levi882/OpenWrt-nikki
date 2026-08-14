@@ -45,6 +45,12 @@ const callNikkiUpdateSubscription = rpc.declare({
     expect: { '': {} }
 });
 
+const callNikkiUpdateChinaIP = rpc.declare({
+    object: 'luci.nikki',
+    method: 'update_china_ip',
+    expect: { '': {} }
+});
+
 const callNikkiAPI = rpc.declare({
     object: 'luci.nikki',
     method: 'api',
@@ -142,6 +148,10 @@ return baseclass.extend({
 
     updateSubscription: function (section_id) {
         return callNikkiUpdateSubscription(section_id);
+    },
+
+    updateChinaIP: function () {
+        return callNikkiUpdateChinaIP();
     },
 
     updateDashboard: function () {
