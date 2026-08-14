@@ -1,0 +1,3 @@
+#!/bin/sh /etc/rc.common
+
+. "$IPKG_INSTROOT/usr/share/nikki/scripts/service.sh"

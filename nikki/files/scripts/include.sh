@@ -2,6 +2,7 @@
 
 # paths
 HOME_DIR="/etc/nikki"
+DATA_DIR="/usr/share/nikki"
 PROFILES_DIR="$HOME_DIR/profiles"
 SUBSCRIPTIONS_DIR="$HOME_DIR/subscriptions"
 MIXIN_FILE_PATH="$HOME_DIR/mixin.yaml"
@@ -24,21 +25,24 @@ BRIDGE_NF_CALL_IPTABLES_FLAG_PATH="$TEMP_DIR/bridge_nf_call_iptables.flag"
 BRIDGE_NF_CALL_IP6TABLES_FLAG_PATH="$TEMP_DIR/bridge_nf_call_ip6tables.flag"
 
 # ucode
-UCODE_DIR="$HOME_DIR/ucode"
+UCODE_DIR="$DATA_DIR/ucode"
 INCLUDE_UC="$UCODE_DIR/include.uc"
 MIXIN_UC="$UCODE_DIR/mixin.uc"
 HIJACK_UT="$UCODE_DIR/hijack.ut"
 
 # scripts
-SH_DIR="$HOME_DIR/scripts"
+SH_DIR="$DATA_DIR/scripts"
 INCLUDE_SH="$SH_DIR/include.sh"
 FIREWALL_INCLUDE_SH="$SH_DIR/firewall_include.sh"
 CHINA_IP_UPDATE_SH="$SH_DIR/update_china_ip.sh"
 
 # nftables
 NFT_DIR="$HOME_DIR/nftables"
+NFT_SEED_DIR="$DATA_DIR/nftables"
 GEOIP_CN_NFT="$NFT_DIR/geoip_cn.nft"
 GEOIP6_CN_NFT="$NFT_DIR/geoip6_cn.nft"
+GEOIP_CN_SEED_NFT="$NFT_SEED_DIR/geoip_cn.nft"
+GEOIP6_CN_SEED_NFT="$NFT_SEED_DIR/geoip6_cn.nft"
 
 # functions
 format_filesize() {
@@ -67,6 +71,15 @@ format_filesize() {
 }
 
 prepare_files() {
+	if [ ! -d "$NFT_DIR" ]; then
+		mkdir -p "$NFT_DIR"
+	fi
+	if [ ! -f "$GEOIP_CN_NFT" ] && [ -f "$GEOIP_CN_SEED_NFT" ]; then
+		cp "$GEOIP_CN_SEED_NFT" "$GEOIP_CN_NFT"
+	fi
+	if [ ! -f "$GEOIP6_CN_NFT" ] && [ -f "$GEOIP6_CN_SEED_NFT" ]; then
+		cp "$GEOIP6_CN_SEED_NFT" "$GEOIP6_CN_NFT"
+	fi
 	if [ ! -d "$LOG_DIR" ]; then
 		mkdir -p "$LOG_DIR"
 	fi

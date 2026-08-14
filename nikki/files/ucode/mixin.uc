@@ -4,7 +4,7 @@
 
 import { cursor } from 'uci';
 import { connect } from 'ubus';
-import { uci_bool, uci_int, uci_array, trim_all } from '/etc/nikki/ucode/include.uc';
+import { uci_bool, uci_int, uci_array, trim_all } from '/usr/share/nikki/ucode/include.uc';
 
 const uci = cursor();
 const ubus = connect();

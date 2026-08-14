@@ -5,7 +5,7 @@
 
 	import { cursor } from 'uci';
 	import { connect } from 'ubus';
-	import { uci_bool, uci_array, get_cgroups_version, get_users, get_groups, get_cgroups, load_profile } from '/etc/nikki/ucode/include.uc';
+	import { uci_bool, uci_array, get_cgroups_version, get_users, get_groups, get_cgroups, load_profile } from '/usr/share/nikki/ucode/include.uc';
 
 	const fw4 = require('fw4');
 

@@ -23,8 +23,11 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
           FEEDNAME: nikki
-          PACKAGES: luci-app-nikki
+          PACKAGES: mihomo-meta luci-app-nikki
           NO_REFRESH_CHECK: true
+
+      - name: verify packages
+        run: bash .github/scripts/verify-packages.sh "bin/packages/${{ matrix.arch }}/nikki"
 
       - name: upload
         uses: actions/upload-artifact@v7

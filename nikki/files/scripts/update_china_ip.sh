@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . /lib/functions.sh
-. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
 
 UPDATE_LOCK_DIR="$TEMP_DIR/china_ip_update.lock"
 IPV4_DOWNLOAD="$TEMP_DIR/china_ip4.download.$$"

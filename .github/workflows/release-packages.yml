@@ -10,7 +10,6 @@ jobs:
   release:
     name: ${{ matrix.arch }}-${{ matrix.branch }} release
     runs-on: ubuntu-latest
-    continue-on-error: true
     strategy:
       fail-fast: false
       matrix:
@@ -27,11 +26,23 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
           FEEDNAME: nikki
-          PACKAGES: luci-app-nikki
+          PACKAGES: mihomo-meta luci-app-nikki
           INDEX: 1
           KEY_BUILD: ${{ secrets.KEY_BUILD }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           NO_REFRESH_CHECK: true
+
+      - name: verify packages
+        run: bash .github/scripts/verify-packages.sh "bin/packages/${{ matrix.arch }}/nikki"
+
+      - if: github.event_name == 'push'
+        name: verify release version
+        run: |
+          version="$(sed -n 's/^PKG_VERSION:=//p' luci-app-nikki/Makefile)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match LuCI version $version."
+            exit 1
+          fi
 
       - name: compress
         run: |

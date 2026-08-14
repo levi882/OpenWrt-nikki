@@ -6,11 +6,34 @@ USE_PROCD=1
 
 PROG="/usr/bin/mihomo"
 
-. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
 
 extra_command 'update_subscription' 'Update subscription by section id'
 extra_command 'update_china_ip' 'Update China mainland IP lists'
 extra_command 'clear_logs' 'Clear logs if size exceeds the limit'
+
+delete_ip_rules() {
+	local family="$1"
+	local rule_pref="$2"
+	local fw_mark="$3"
+	local fw_mask="$4"
+	local route_table="$5"
+
+	while ip "$family" rule del pref "$rule_pref" fwmark "$fw_mark/$fw_mask" table "$route_table" > /dev/null 2>&1; do
+		:
+	done
+}
+
+replace_ip_rule() {
+	local family="$1"
+	local rule_pref="$2"
+	local fw_mark="$3"
+	local fw_mask="$4"
+	local route_table="$5"
+
+	delete_ip_rules "$family" "$rule_pref" "$fw_mark" "$fw_mask" "$route_table"
+	ip "$family" rule add pref "$rule_pref" fwmark "$fw_mark/$fw_mask" table "$route_table"
+}
 
 boot_func() {
 	# prepare files
@@ -404,29 +427,31 @@ service_started() {
 		# ip route and rule
 		if [ "$tproxy_enable" = 1 ]; then
 			if [ "$ipv4_proxy" = 1 ]; then
-				ip -4 route add local default dev lo table "$tproxy_route_table"
-				ip -4 rule add pref "$tproxy_rule_pref" fwmark "$tproxy_fw_mark/$tproxy_fw_mask" table "$tproxy_route_table"
+				ip -4 route replace local default dev lo table "$tproxy_route_table"
+				replace_ip_rule -4 "$tproxy_rule_pref" "$tproxy_fw_mark" "$tproxy_fw_mask" "$tproxy_route_table"
 			fi
 			if [ "$ipv6_proxy" = 1 ]; then
-				ip -6 route add local default dev lo table "$tproxy_route_table"
-				ip -6 rule add pref "$tproxy_rule_pref" fwmark "$tproxy_fw_mark/$tproxy_fw_mask" table "$tproxy_route_table"
+				ip -6 route replace local default dev lo table "$tproxy_route_table"
+				replace_ip_rule -6 "$tproxy_rule_pref" "$tproxy_fw_mark" "$tproxy_fw_mask" "$tproxy_route_table"
 			fi
 		fi
 		if [ "$tun_enable" = 1 ]; then
 			if [ "$ipv4_proxy" = 1 ]; then
-				ip -4 route add unicast default dev "$tun_device" table "$tun_route_table"
-				ip -4 rule add pref "$tun_rule_pref" fwmark "$tun_fw_mark/$tun_fw_mask" table "$tun_route_table"
+				ip -4 route replace unicast default dev "$tun_device" table "$tun_route_table"
+				replace_ip_rule -4 "$tun_rule_pref" "$tun_fw_mark" "$tun_fw_mask" "$tun_route_table"
 			fi
 			if [ "$ipv6_proxy" = 1 ]; then
-				ip -6 route add unicast default dev "$tun_device" table "$tun_route_table"
-				ip -6 rule add pref "$tun_rule_pref" fwmark "$tun_fw_mark/$tun_fw_mask" table "$tun_route_table"
+				ip -6 route replace unicast default dev "$tun_device" table "$tun_route_table"
+				replace_ip_rule -6 "$tun_rule_pref" "$tun_fw_mark" "$tun_fw_mask" "$tun_route_table"
 			fi
 			$FIREWALL_INCLUDE_SH
 		fi
 		if [ "$dns_mode" = "fake-ip" ] && [ -n "$fake_ip6_range" ]; then
-			ip link add "$dummy_device" type dummy
+			if ! ip link show dev "$dummy_device" > /dev/null 2>&1; then
+				ip link add "$dummy_device" type dummy
+			fi
 			ip link set dev "$dummy_device" up
-			ip -6 route add "$fake_ip6_range" dev "$dummy_device"
+			ip -6 route replace "$fake_ip6_range" dev "$dummy_device"
 		fi
 		# hijack
 		utpl -S "$HIJACK_UT" | nft -f -
@@ -461,7 +486,13 @@ cleanup() {
 	local log_clear_at_stop
 	config_get_bool log_clear_at_stop "log" "clear_at_stop" 0
 	## routing config
-	local tproxy_route_table tun_route_table dummy_device
+	local tproxy_fw_mark tproxy_fw_mask tun_fw_mark tun_fw_mask tproxy_rule_pref tun_rule_pref tproxy_route_table tun_route_table dummy_device
+	config_get tproxy_fw_mark "routing" "tproxy_fw_mark" "0x80"
+	config_get tproxy_fw_mask "routing" "tproxy_fw_mask" "0xFF"
+	config_get tun_fw_mark "routing" "tun_fw_mark" "0x81"
+	config_get tun_fw_mask "routing" "tun_fw_mask" "0xFF"
+	config_get tproxy_rule_pref "routing" "tproxy_rule_pref" "1024"
+	config_get tun_rule_pref "routing" "tun_rule_pref" "1025"
 	config_get tproxy_route_table "routing" "tproxy_route_table" "80"
 	config_get tun_route_table "routing" "tun_route_table" "81"
 	config_get dummy_device "routing" "dummy_device" "nikki-dummy"
@@ -472,17 +503,17 @@ cleanup() {
 		log "Log" "Logs are cleared due to clear at stop is enabled."
 	fi
 	# delete routing policy
-	ip -4 rule del table "$tproxy_route_table" > /dev/null 2>&1
-	ip -4 rule del table "$tun_route_table" > /dev/null 2>&1
-	ip -6 rule del table "$tproxy_route_table" > /dev/null 2>&1
-	ip -6 rule del table "$tun_route_table" > /dev/null 2>&1
+	delete_ip_rules -4 "$tproxy_rule_pref" "$tproxy_fw_mark" "$tproxy_fw_mask" "$tproxy_route_table"
+	delete_ip_rules -4 "$tun_rule_pref" "$tun_fw_mark" "$tun_fw_mask" "$tun_route_table"
+	delete_ip_rules -6 "$tproxy_rule_pref" "$tproxy_fw_mark" "$tproxy_fw_mask" "$tproxy_route_table"
+	delete_ip_rules -6 "$tun_rule_pref" "$tun_fw_mark" "$tun_fw_mask" "$tun_route_table"
 	# delete routing table
 	ip -4 route flush table "$tproxy_route_table" > /dev/null 2>&1
 	ip -4 route flush table "$tun_route_table" > /dev/null 2>&1
 	ip -6 route flush table "$tproxy_route_table" > /dev/null 2>&1
 	ip -6 route flush table "$tun_route_table" > /dev/null 2>&1
 	# delete dummy device
-	ip -6 link del "$dummy_device" > /dev/null 2>&1
+	ip link del dev "$dummy_device" > /dev/null 2>&1
 	# delete hijack
 	nft delete table inet nikki > /dev/null 2>&1
 	local handles handle
