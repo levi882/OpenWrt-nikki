@@ -195,9 +195,9 @@ return view.extend({
         o.rmempty = false;
         o.description = _('Only HTTPS URLs serving one CIDR per line are supported.');
 
-        o = s.taboption('bypass', form.Button, '_update_china_ip');
+        o = s.taboption('bypass', form.Button, '_update_china_ip', _('Update China Mainland IP'));
         o.inputstyle = 'positive';
-        o.inputtitle = _('Update China Mainland IP');
+        o.inputtitle = _('Update');
         o.onclick = function () {
             return nikki.updateChinaIP().then(function (result) {
                 const success = result?.success === true;

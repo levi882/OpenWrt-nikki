@@ -64,7 +64,8 @@ const methods = {
 	},
 	update_china_ip: {
 		call: function() {
-			const success = system(['service', 'nikki', 'update_china_ip']) == 0;
+			const updater = '/etc/nikki/scripts/update_china_ip.sh';
+			const success = access(updater, 'x') && system([updater]) == 0;
 			return { success: success };
 		}
 	},

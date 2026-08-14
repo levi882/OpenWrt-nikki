@@ -290,7 +290,7 @@ start_service() {
 	fi
 	if [ "$china_ip_auto_update" = 1 ] && [ -n "$china_ip_update_cron" ]; then
 		log "App" "Set China mainland IP list auto update."
-		echo "$china_ip_update_cron /etc/init.d/nikki update_china_ip #nikki china ip auto update" >> "/etc/crontabs/root"
+		echo "$china_ip_update_cron $CHINA_IP_UPDATE_SH #nikki china ip auto update" >> "/etc/crontabs/root"
 		reload_cron=1
 	fi
 	if [ "$reload_cron" = 1 ]; then
