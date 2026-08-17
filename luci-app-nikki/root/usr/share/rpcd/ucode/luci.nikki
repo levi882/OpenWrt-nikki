@@ -3,7 +3,7 @@
 'use strict';
 
 import { access, popen, writefile } from 'fs';
-import { get_users, get_groups, get_cgroups, load_profile } from '/usr/share/nikki/ucode/include.uc';
+import { get_users, get_groups, get_cgroups, load_profile } from '/etc/nikki/ucode/include.uc';
 
 const methods = {
 	version: {
@@ -64,7 +64,7 @@ const methods = {
 	},
 	update_china_ip: {
 		call: function() {
-			const updater = '/usr/share/nikki/scripts/update_china_ip.sh';
+			const updater = '/etc/nikki/scripts/update_china_ip.sh';
 			const success = access(updater, 'x') && system([updater]) == 0;
 			return { success: success };
 		}
@@ -110,7 +110,7 @@ const methods = {
 	},
 	debug: {
 		call: function() {
-			const success = system('/usr/share/nikki/scripts/debug.sh > /var/log/nikki/debug.log') == 0;
+			const success = system('/etc/nikki/scripts/debug.sh > /var/log/nikki/debug.log') == 0;
 			return { success: success };
 		}
 	}

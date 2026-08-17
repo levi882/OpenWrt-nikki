@@ -1,0 +1,11 @@
+.gitattributes text eol=lf
+*.sh text eol=lf
+*.init text eol=lf
+Makefile text eol=lf
+*.js text eol=lf
+*.nikki text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.uc text eol=lf
+*.ut text eol=lf

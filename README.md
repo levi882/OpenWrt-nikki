@@ -58,6 +58,10 @@ wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/in
 wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/uninstall.sh | ash
 ```
 
+### Package Compatibility
+
+Nikki keeps its established `/etc/init.d/nikki` entry point and `/etc/nikki` runtime paths. Release packages preserve the UCI configuration, mixin, subscriptions, profiles, and locally updated China mainland IP lists. The v1.26.2 release is validated with an APK round trip from official v1.26.1 to v1.26.2 and back to v1.26.1, including a protected local init script. If the incompatible wrapper from the earlier v1.26.2 package is protected, the upgrade backs it up to `/etc/nikki/nikki-r6-wrapper.bak` before restoring the full init entry point.
+
 ## How To Use
 
 See [Wiki](https://github.com/nikkinikki-org/OpenWrt-nikki/wiki)

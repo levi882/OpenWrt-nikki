@@ -1,7 +1,7 @@
 #!/bin/sh
 
 . "$IPKG_INSTROOT/lib/functions.sh"
-. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
 config_load nikki
 config_get_bool enabled "config" "enabled" 0

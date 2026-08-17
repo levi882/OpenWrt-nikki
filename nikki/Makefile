@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nikki
 PKG_VERSION:=2026.04.08
-PKG_RELEASE:=6
+PKG_RELEASE:=7
 
 PKG_LICENSE:=GPL3.0+
 PKG_MAINTAINER:=Joseph Mory <morytyann@gmail.com>
@@ -20,10 +20,14 @@ endef
 define Package/nikki/conffiles
 /etc/config/nikki
 /etc/nikki/mixin.yaml
+/etc/nikki/nftables/geoip_cn.nft
+/etc/nikki/nftables/geoip6_cn.nft
 endef
 
 define Package/nikki/install
 	$(INSTALL_DIR) $(1)/etc/nikki
+	$(INSTALL_DIR) $(1)/etc/nikki/ucode
+	$(INSTALL_DIR) $(1)/etc/nikki/scripts
 	$(INSTALL_DIR) $(1)/etc/nikki/nftables
 	$(INSTALL_DIR) $(1)/etc/nikki/profiles
 	$(INSTALL_DIR) $(1)/etc/nikki/subscriptions
@@ -34,27 +38,24 @@ define Package/nikki/install
 
 	$(INSTALL_DATA) $(CURDIR)/files/mixin.yaml $(1)/etc/nikki/mixin.yaml
 
-	$(INSTALL_DIR) $(1)/usr/share/nikki/ucode
-	$(INSTALL_DIR) $(1)/usr/share/nikki/scripts
-	$(INSTALL_DIR) $(1)/usr/share/nikki/nftables
-	$(INSTALL_BIN) $(CURDIR)/files/ucode/include.uc $(1)/usr/share/nikki/ucode/include.uc
-	$(INSTALL_BIN) $(CURDIR)/files/ucode/mixin.uc $(1)/usr/share/nikki/ucode/mixin.uc
-	$(INSTALL_BIN) $(CURDIR)/files/ucode/hijack.ut $(1)/usr/share/nikki/ucode/hijack.ut
+	$(INSTALL_BIN) $(CURDIR)/files/ucode/include.uc $(1)/etc/nikki/ucode/include.uc
+	$(INSTALL_BIN) $(CURDIR)/files/ucode/mixin.uc $(1)/etc/nikki/ucode/mixin.uc
+	$(INSTALL_BIN) $(CURDIR)/files/ucode/hijack.ut $(1)/etc/nikki/ucode/hijack.ut
 
-	$(INSTALL_BIN) $(CURDIR)/files/scripts/include.sh $(1)/usr/share/nikki/scripts/include.sh
-	$(INSTALL_BIN) $(CURDIR)/files/scripts/firewall_include.sh $(1)/usr/share/nikki/scripts/firewall_include.sh
-	$(INSTALL_BIN) $(CURDIR)/files/scripts/update_china_ip.sh $(1)/usr/share/nikki/scripts/update_china_ip.sh
-	$(INSTALL_BIN) $(CURDIR)/files/scripts/debug.sh $(1)/usr/share/nikki/scripts/debug.sh
-	$(INSTALL_BIN) $(CURDIR)/files/nikki.init $(1)/usr/share/nikki/scripts/service.sh
+	$(INSTALL_BIN) $(CURDIR)/files/scripts/include.sh $(1)/etc/nikki/scripts/include.sh
+	$(INSTALL_BIN) $(CURDIR)/files/scripts/firewall_include.sh $(1)/etc/nikki/scripts/firewall_include.sh
+	$(INSTALL_BIN) $(CURDIR)/files/scripts/update_china_ip.sh $(1)/etc/nikki/scripts/update_china_ip.sh
+	$(INSTALL_BIN) $(CURDIR)/files/scripts/debug.sh $(1)/etc/nikki/scripts/debug.sh
+	$(INSTALL_BIN) $(CURDIR)/files/scripts/repair_legacy_init.sh $(1)/etc/nikki/scripts/repair_legacy_init.sh
 
-	$(INSTALL_DATA) $(CURDIR)/files/nftables/geoip_cn.nft $(1)/usr/share/nikki/nftables/geoip_cn.nft
-	$(INSTALL_DATA) $(CURDIR)/files/nftables/geoip6_cn.nft $(1)/usr/share/nikki/nftables/geoip6_cn.nft
+	$(INSTALL_DATA) $(CURDIR)/files/nftables/geoip_cn.nft $(1)/etc/nikki/nftables/geoip_cn.nft
+	$(INSTALL_DATA) $(CURDIR)/files/nftables/geoip6_cn.nft $(1)/etc/nikki/nftables/geoip6_cn.nft
 
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_CONF) $(CURDIR)/files/nikki.conf $(1)/etc/config/nikki
 
 	$(INSTALL_DIR) $(1)/etc/init.d
-	$(INSTALL_BIN) $(CURDIR)/files/nikki-wrapper.init $(1)/etc/init.d/nikki
+	$(INSTALL_BIN) $(CURDIR)/files/nikki.init $(1)/etc/init.d/nikki
 
 	$(INSTALL_DIR) $(1)/etc/uci-defaults
 	$(INSTALL_BIN) $(CURDIR)/files/uci-defaults/firewall.sh $(1)/etc/uci-defaults/99_firewall_nikki
@@ -63,6 +64,12 @@ define Package/nikki/install
 
 	$(INSTALL_DIR) $(1)/lib/upgrade/keep.d
 	$(INSTALL_DATA) $(CURDIR)/files/nikki.upgrade $(1)/lib/upgrade/keep.d/nikki
+endef
+
+define Package/nikki/postinst
+#!/bin/sh
+repair_script="$${IPKG_INSTROOT}/etc/nikki/scripts/repair_legacy_init.sh"
+[ ! -x "$$repair_script" ] || "$$repair_script"
 endef
 
 define Package/nikki/postrm

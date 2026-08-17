@@ -6,7 +6,7 @@ USE_PROCD=1
 
 PROG="/usr/bin/mihomo"
 
-. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
 extra_command 'update_subscription' 'Update subscription by section id'
 extra_command 'update_china_ip' 'Update China mainland IP lists'
@@ -311,7 +311,8 @@ start_service() {
 		echo "$log_scheduled_clear_cron /etc/init.d/nikki clear_logs #nikki log scheduled clear" >> "/etc/crontabs/root"
 		reload_cron=1
 	fi
-	if [ "$china_ip_auto_update" = 1 ] && [ -n "$china_ip_update_cron" ]; then
+	if [ "$china_ip_auto_update" = 1 ] && [ -n "$china_ip_update_cron" ] &&
+		[ -n "${CHINA_IP_UPDATE_SH:-}" ] && [ -x "$CHINA_IP_UPDATE_SH" ]; then
 		log "App" "Set China mainland IP list auto update."
 		echo "$china_ip_update_cron $CHINA_IP_UPDATE_SH #nikki china ip auto update" >> "/etc/crontabs/root"
 		reload_cron=1
@@ -541,6 +542,10 @@ cleanup() {
 }
 
 update_china_ip() {
+	if [ -z "${CHINA_IP_UPDATE_SH:-}" ] || [ ! -x "$CHINA_IP_UPDATE_SH" ]; then
+		echo "China mainland IP list updater is not available in this package version." >&2
+		return 1
+	fi
 	"$CHINA_IP_UPDATE_SH"
 }
 

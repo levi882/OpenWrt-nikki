@@ -18,6 +18,9 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
 
+      - name: verify downgrade compatibility
+        run: bash .github/scripts/verify-compatibility.sh
+
       - name: build
         uses: openwrt/gh-action-sdk@main
         env:
