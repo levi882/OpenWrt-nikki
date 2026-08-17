@@ -26,7 +26,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
           FEEDNAME: nikki
-          PACKAGES: mihomo-meta luci-app-nikki
+          PACKAGES: luci-app-nikki
           NO_REFRESH_CHECK: true
 
       - name: verify packages
