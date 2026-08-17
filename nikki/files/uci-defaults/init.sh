@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
 # check nikki.config.init
 init=$(uci -q get nikki.config.init); [ -z "$init" ] && return

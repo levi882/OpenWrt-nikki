@@ -1,7 +1,0 @@
-#!/bin/sh /etc/rc.common
-
-START=99
-STOP=10
-USE_PROCD=1
-
-. "$IPKG_INSTROOT/usr/share/nikki/scripts/service.sh"

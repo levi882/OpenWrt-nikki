@@ -10,6 +10,7 @@ if [[ ! -d "$package_dir" ]]; then
 fi
 
 luci_version="$(sed -n 's/^PKG_VERSION:=//p' luci-app-nikki/Makefile)"
+luci_release="$(sed -n 's/^PKG_RELEASE:=//p' luci-app-nikki/Makefile)"
 nikki_version="$(sed -n 's/^PKG_VERSION:=//p' nikki/Makefile)"
 nikki_release="$(sed -n 's/^PKG_RELEASE:=//p' nikki/Makefile)"
 
@@ -31,7 +32,7 @@ require_one_apk() {
 	printf 'Verified %s: %s\n' "$package_name" "${matches[0]}"
 }
 
-require_one_apk "luci-app-nikki" "luci-app-nikki-${luci_version}-r*.apk"
+require_one_apk "luci-app-nikki" "luci-app-nikki-${luci_version}-r${luci_release}.apk"
 require_one_apk "nikki" "nikki-${nikki_version}-r${nikki_release}.apk"
 require_one_apk "mihomo-meta" "mihomo-meta-*.apk"
 

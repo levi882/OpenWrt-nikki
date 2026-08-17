@@ -58,6 +58,10 @@ wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/in
 wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/uninstall.sh | ash
 ```
 
+### 软件包兼容性
+
+Nikki 保持既有的 `/etc/init.d/nikki` 启动入口和 `/etc/nikki` 运行路径。发布包会保留 UCI 配置、混入文件、订阅、配置文件以及本地更新的中国大陆 IP 列表。v1.26.2 发布前会执行官方 v1.26.1 → v1.26.2 → v1.26.1 的 APK 往返测试，并覆盖启动脚本受保护的降级场景。如果系统保护了先前 v1.26.2 包的不兼容 wrapper，升级时会先备份到 `/etc/nikki/nikki-r6-wrapper.bak`，再恢复完整启动入口。
+
 ## 如何使用
 
 查看 [Wiki](https://github.com/nikkinikki-org/OpenWrt-nikki/wiki)

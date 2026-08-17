@@ -18,12 +18,15 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
 
+      - name: verify downgrade compatibility
+        run: bash .github/scripts/verify-compatibility.sh
+
       - name: build
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
           FEEDNAME: nikki
-          PACKAGES: luci-app-nikki
+          PACKAGES: mihomo-meta luci-app-nikki
           NO_REFRESH_CHECK: true
 
       - name: verify packages

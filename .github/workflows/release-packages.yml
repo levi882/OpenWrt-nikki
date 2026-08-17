@@ -21,12 +21,15 @@ jobs:
       - name: checkout
         uses: actions/checkout@v6
 
+      - name: verify downgrade compatibility
+        run: bash .github/scripts/verify-compatibility.sh
+
       - name: build
         uses: openwrt/gh-action-sdk@main
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
           FEEDNAME: nikki
-          PACKAGES: luci-app-nikki
+          PACKAGES: mihomo-meta luci-app-nikki
           INDEX: 1
           KEY_BUILD: ${{ secrets.KEY_BUILD }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
@@ -52,6 +55,7 @@ jobs:
         name: release
         uses: softprops/action-gh-release@v3
         with:
+          overwrite_files: true
           files: |
             nikki_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz
 

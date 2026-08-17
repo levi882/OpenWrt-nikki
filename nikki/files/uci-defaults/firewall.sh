@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. "$IPKG_INSTROOT/usr/share/nikki/scripts/include.sh"
+. "$IPKG_INSTROOT/etc/nikki/scripts/include.sh"
 
 uci -q batch <<-EOF > /dev/null
 	del firewall.nikki
