@@ -179,25 +179,34 @@ return view.extend({
 
         o = s.taboption('bypass', form.Flag, 'china_ip_auto_update', _('Auto Update China Mainland IP'));
         o.rmempty = false;
+        o.depends('bypass_china_mainland_ip', '1');
+        o.depends('bypass_china_mainland_ip6', '1');
 
         o = s.taboption('bypass', form.Value, 'china_ip_update_cron', _('China Mainland IP Update Cron'));
         o.retain = true;
         o.rmempty = false;
-        o.depends('china_ip_auto_update', '1');
+        o.depends({ 'bypass_china_mainland_ip': '1', 'china_ip_auto_update': '1' });
+        o.depends({ 'bypass_china_mainland_ip6': '1', 'china_ip_auto_update': '1' });
 
         o = s.taboption('bypass', form.Value, 'china_ip_url', _('China Mainland IPv4 URL'));
         o.datatype = 'url';
+        o.retain = true;
         o.rmempty = false;
         o.description = _('Only HTTPS URLs serving one CIDR per line are supported.');
+        o.depends('bypass_china_mainland_ip', '1');
 
         o = s.taboption('bypass', form.Value, 'china_ip6_url', _('China Mainland IPv6 URL'));
         o.datatype = 'url';
+        o.retain = true;
         o.rmempty = false;
         o.description = _('Only HTTPS URLs serving one CIDR per line are supported.');
+        o.depends('bypass_china_mainland_ip6', '1');
 
         o = s.taboption('bypass', form.Button, '_update_china_ip', _('Update China Mainland IP'));
         o.inputstyle = 'positive';
         o.inputtitle = _('Update');
+        o.depends('bypass_china_mainland_ip', '1');
+        o.depends('bypass_china_mainland_ip6', '1');
         o.onclick = function () {
             return nikki.updateChinaIP().then(function (result) {
                 const success = result?.success === true;

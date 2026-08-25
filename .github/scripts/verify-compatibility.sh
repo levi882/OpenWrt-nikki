@@ -24,7 +24,7 @@ test ! -e nikki/files/nikki-wrapper.init || fail 'The split init wrapper is not 
 
 require_literal nikki/Makefile '+mihomo-meta'
 require_literal nikki/Makefile 'PKG_RELEASE:=7'
-require_literal luci-app-nikki/Makefile 'PKG_RELEASE:=2'
+require_literal luci-app-nikki/Makefile 'PKG_RELEASE:=3'
 
 require_literal nikki/Makefile '$(INSTALL_BIN) $(CURDIR)/files/nikki.init $(1)/etc/init.d/nikki'
 require_literal nikki/Makefile '$(INSTALL_BIN) $(CURDIR)/files/scripts/include.sh $(1)/etc/nikki/scripts/include.sh'
