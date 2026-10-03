@@ -23,8 +23,8 @@ fi
 test ! -e nikki/files/nikki-wrapper.init || fail 'The split init wrapper is not downgrade compatible.'
 
 require_literal nikki/Makefile '+mihomo-meta'
-require_literal nikki/Makefile 'PKG_RELEASE:=7'
-require_literal luci-app-nikki/Makefile 'PKG_RELEASE:=3'
+require_literal nikki/Makefile 'PKG_RELEASE:=8'
+require_literal luci-app-nikki/Makefile 'PKG_RELEASE:=4'
 
 require_literal nikki/Makefile '$(INSTALL_BIN) $(CURDIR)/files/nikki.init $(1)/etc/init.d/nikki'
 require_literal nikki/Makefile '$(INSTALL_BIN) $(CURDIR)/files/scripts/include.sh $(1)/etc/nikki/scripts/include.sh'
@@ -44,5 +44,7 @@ find nikki/files -type f \( -name '*.sh' -o -name '*.init' \) -print0 |
 	while IFS= read -r -d '' script; do
 		sh -n "$script" || fail "Shell syntax check failed: $script"
 	done
+
+bash .github/scripts/test-cron-refresh.sh
 
 echo 'Verified legacy paths, original meta core dependency, preserved data files, and shell syntax.'
