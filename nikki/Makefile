@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=nikki
 PKG_VERSION:=2026.04.08
-PKG_RELEASE:=7
+PKG_RELEASE:=8
 
 PKG_LICENSE:=GPL3.0+
 PKG_MAINTAINER:=Joseph Mory <morytyann@gmail.com>
