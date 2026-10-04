@@ -72,7 +72,7 @@ jobs:
               exit 1
             fi
             git diff --exit-code "refs/tags/$RELEASE_TAG" HEAD \
-              -- mihomo-meta/Makefile .github/mihomo-release.json
+              -- mihomo-meta/Makefile nikki/Makefile luci-app-nikki/Makefile
             git checkout --detach "refs/tags/$RELEASE_TAG"
           fi
           echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
