@@ -13,6 +13,7 @@ luci_version="$(sed -n 's/^PKG_VERSION:=//p' luci-app-nikki/Makefile)"
 luci_release="$(sed -n 's/^PKG_RELEASE:=//p' luci-app-nikki/Makefile)"
 nikki_version="$(sed -n 's/^PKG_VERSION:=//p' nikki/Makefile)"
 nikki_release="$(sed -n 's/^PKG_RELEASE:=//p' nikki/Makefile)"
+mihomo_version="$(sed -n 's/^PKG_VERSION:=//p' mihomo-meta/Makefile)"
 
 require_one_apk() {
 	local package_name="$1"
@@ -34,7 +35,7 @@ require_one_apk() {
 
 require_one_apk "luci-app-nikki" "luci-app-nikki-${luci_version}-r${luci_release}.apk"
 require_one_apk "nikki" "nikki-${nikki_version}-r${nikki_release}.apk"
-require_one_apk "mihomo-meta" "mihomo-meta-*.apk"
+require_one_apk "mihomo-meta" "mihomo-meta-${mihomo_version}.apk"
 
 if compgen -G "$package_dir/mihomo-alpha-*.apk" > /dev/null; then
 	echo "::error::mihomo-alpha must not be included in this release."
