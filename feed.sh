@@ -1,68 +1,42 @@
 #!/bin/sh
 
-# Nikki's feed
+set -eu
 
-# check env
-if [[ ! -x "/bin/opkg" && ! -x "/usr/bin/apk" || ! -x "/sbin/fw4" ]]; then
-	echo "only supports OpenWrt build with firewall4!"
+# Signed packages published by levi882/Openwrt_packages.
+if [ ! -x /usr/bin/apk ] || [ ! -x /sbin/fw4 ]; then
+	echo 'This feed requires OpenWrt with apk and firewall4.' >&2
 	exit 1
 fi
-
-# include openwrt_release
+# shellcheck source=/dev/null
 . /etc/openwrt_release
-
-# get branch/arch
-arch="$DISTRIB_ARCH"
-branch=
-case "$DISTRIB_RELEASE" in
-	*"24.10"*)
-		branch="openwrt-24.10"
-		;;
-	*"25.12"*)
-		branch="openwrt-25.12"
-		;;
-	"SNAPSHOT")
-		branch="SNAPSHOT"
-		;;
+case "$DISTRIB_RELEASE:$DISTRIB_ARCH" in
+	*25.12*:x86_64) ;;
 	*)
-		echo "unsupported release: $DISTRIB_RELEASE"
+		echo "myfeed currently supports OpenWrt 25.12 / x86_64; got $DISTRIB_RELEASE / $DISTRIB_ARCH." >&2
 		exit 1
 		;;
 esac
 
-# feed url
-repository_url="https://nikkinikki.pages.dev"
-feed_url="$repository_url/$branch/$arch/nikki"
+repository_url='https://openwrt-packages.pages.dev'
+feed_url="$repository_url/openwrt-25.12/x86_64/myfeed"
+mkdir -p /etc/apk/keys /etc/apk/repositories.d
+touch /etc/apk/repositories.d/customfeeds.list
+key_file="$(mktemp /tmp/nikki-myfeed-key.XXXXXX)"
+repository_file="$(mktemp /etc/apk/repositories.d/.nikki-myfeed.XXXXXX)"
+trap 'rm -f "$key_file" "$repository_file"' EXIT HUP INT TERM
 
-if [ -x "/bin/opkg" ]; then
-	# add key
-	echo "add key"
-	key_build_pub_file="key-build.pub"
-	wget -O "$key_build_pub_file" "$repository_url/key-build.pub"
-	opkg-key add "$key_build_pub_file"
-	rm -f "$key_build_pub_file"
-	# add feed
-	echo "add feed"
-	if grep -q nikki /etc/opkg/customfeeds.conf; then
-		sed -i '/nikki/d' /etc/opkg/customfeeds.conf
-	fi
-	echo "src/gz nikki $feed_url" >> /etc/opkg/customfeeds.conf
-	# update feeds
-	echo "update feeds"
-	opkg update
-elif [ -x "/usr/bin/apk" ]; then
-	# add key
-	echo "add key"
-	wget -O "/etc/apk/keys/nikki.pem" "$repository_url/public-key.pem"
-	# add feed
-	echo "add feed"
-	if grep -q nikki /etc/apk/repositories.d/customfeeds.list; then
-		sed -i '/nikki/d' /etc/apk/repositories.d/customfeeds.list
-	fi
-	echo "$feed_url/packages.adb" >> /etc/apk/repositories.d/customfeeds.list
-	# update feeds
-	echo "update feeds"
-	apk update
-fi
+echo 'Adding the myfeed signing key'
+wget -O "$key_file" "$repository_url/public-key.pem"
+test -s "$key_file"
+cp "$key_file" /etc/apk/keys/myfeed.pem
 
-echo "success"
+# Keep unrelated feeds and make both repeated installation and @myfeed pins work.
+awk -v feed="$feed_url/packages.adb" '
+	index($0, "https://nikkinikki.pages.dev/") == 0 && index($0, feed) == 0 { print }
+' /etc/apk/repositories.d/customfeeds.list > "$repository_file"
+printf '@myfeed %s/packages.adb\n' "$feed_url" >> "$repository_file"
+mv "$repository_file" /etc/apk/repositories.d/customfeeds.list
+
+echo 'Refreshing the signed myfeed repository'
+apk update
+echo 'Feed configured successfully'

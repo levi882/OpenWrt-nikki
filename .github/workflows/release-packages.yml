@@ -6,6 +6,13 @@ on:
     tags:
       - v*
 
+permissions:
+  contents: write
+
+concurrency:
+  group: nikki-release
+  cancel-in-progress: false
+
 jobs:
   release:
     name: ${{ matrix.arch }}-${{ matrix.branch }} release
@@ -42,8 +49,10 @@ jobs:
         name: verify release version
         run: |
           version="$(sed -n 's/^PKG_VERSION:=//p' luci-app-nikki/Makefile)"
-          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
-            echo "::error::Tag $GITHUB_REF_NAME does not match LuCI version $version."
+          core_version="$(sed -n 's/^PKG_VERSION:=//p' mihomo-meta/Makefile)"
+          if [ "$GITHUB_REF_NAME" != "v$version" ] && \
+             [ "$GITHUB_REF_NAME" != "v$version-mihomo-$core_version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match LuCI $version / Mihomo $core_version."
             exit 1
           fi
 

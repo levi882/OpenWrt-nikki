@@ -1,169 +1,136 @@
-name: dependabot
+name: update-mihomo
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    # Saturday 04:17 Asia/Shanghai, one day before the myfeed refresh.
+    - cron: "17 20 * * 5"
   workflow_dispatch:
+    inputs:
+      verify_source:
+        description: Verify the source checksum even when the stable version is current
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nikki-release
+  cancel-in-progress: false
 
 jobs:
-  get_current_alpha_info:
+  update:
     runs-on: ubuntu-latest
-    outputs:
-      pkg_source_version: ${{ steps.info.outputs.pkg_source_version }}
+    timeout-minutes: 120
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
-      - id: checkout
-        name: checkout
+      - name: checkout this fork
         uses: actions/checkout@v6
         with:
-          repository: nikkinikki-org/OpenWrt-nikki
-          ref: main
-          path: OpenWrt-nikki
-      - id: info
-        name: info
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: test automatic updates
         run: |
-          echo "pkg_source_version=$(grep "PKG_SOURCE_VERSION:=" OpenWrt-nikki/mihomo-alpha/Makefile | cut -d '=' -f 2)" >> $GITHUB_OUTPUT
-  get_latest_alpha_info:
-    runs-on: ubuntu-latest
-    outputs:
-      commit_date: ${{ steps.info.outputs.commit_date }}
-      commit_sha: ${{ steps.info.outputs.commit_sha }}
-      short_commit_sha: ${{ steps.info.outputs.short_commit_sha }}
-      checksum: ${{ steps.info.outputs.checksum }}
-    steps:
-      - id: checkout
-        name: checkout
-        uses: actions/checkout@v6
-        with:
-          repository: 'MetaCubeX/mihomo'
-          ref: 'Alpha'
-          path: 'mihomo'
-      - id: info
-        name: info
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+          bash .github/scripts/verify-compatibility.sh
+          sh -n feed.sh install.sh
+
+      - name: check the latest stable Mihomo release
+        id: update
+        env:
+          VERIFY_SOURCE: ${{ inputs.verify_source || false }}
         run: |
-          umask 0022
-          git -C mihomo config core.abbrev 8
-          commit_date=$(git -C mihomo log -n 1 --format=%cd --date=format:%Y.%m.%d)
-          commit_timestamp=$(git -C mihomo log -n 1 --format=%cd --date=format:%s)
-          commit_sha=$(git -C mihomo rev-parse HEAD)
-          commit_short_sha=$(git -C mihomo rev-parse --short=7 HEAD)
-          pkg_name="mihomo-alpha"
-          pkg_source_dir="${pkg_name}-${commit_date}"
-          pkg_source="${pkg_source_dir}.tar.gz"
-          mkdir -p "${pkg_source_dir}"
-          git -C mihomo archive --format=tar HEAD | tar -x -f - -C "${pkg_source_dir}"
-          tar --numeric-owner --owner=0 --group=0 --mode=a-s --sort=name --mtime="@${commit_timestamp}" -c "${pkg_source_dir}" | gzip -n -c > "${pkg_source}"
-          echo "commit_date=$commit_date" >> $GITHUB_OUTPUT
-          echo "commit_sha=$commit_sha" >> $GITHUB_OUTPUT
-          echo "short_commit_sha=$commit_short_sha" >> $GITHUB_OUTPUT
-          echo "checksum=$(sha256sum ${pkg_source} | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
-  update_alpha:
-    needs:
-      - get_current_alpha_info
-      - get_latest_alpha_info
-    if: ${{ needs.get_current_alpha_info.outputs.pkg_source_version != needs.get_latest_alpha_info.outputs.commit_sha }}
-    runs-on: ubuntu-latest
-    steps:
-      - id: checkout
-        name: checkout
-        uses: actions/checkout@v6
-        with:
-          repository: nikkinikki-org/OpenWrt-nikki
-          ref: main
-          path: OpenWrt-nikki
-      - id: update
-        name: update
+          args=()
+          if [ "$VERIFY_SOURCE" = true ]; then
+            args+=(--verify-source)
+          fi
+          python3 .github/scripts/update-mihomo.py "${args[@]}"
+
+      - name: prepare the source commit
+        if: steps.update.outputs.build == 'true'
+        id: source
+        env:
+          RELEASE_TAG: ${{ steps.update.outputs.release_tag }}
+          CHANGED: ${{ steps.update.outputs.changed }}
+          VERSION: ${{ steps.update.outputs.version }}
         run: |
-          sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=${{ needs.get_latest_alpha_info.outputs.commit_date }}/" OpenWrt-nikki/mihomo-alpha/Makefile
-          sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=${{ needs.get_latest_alpha_info.outputs.commit_sha }}/" OpenWrt-nikki/mihomo-alpha/Makefile
-          sed -i "s/PKG_MIRROR_HASH:=.*/PKG_MIRROR_HASH:=${{ needs.get_latest_alpha_info.outputs.checksum }}/" OpenWrt-nikki/mihomo-alpha/Makefile
-          sed -i "s/PKG_BUILD_VERSION:=.*/PKG_BUILD_VERSION:=alpha-${{ needs.get_latest_alpha_info.outputs.short_commit_sha }}/" OpenWrt-nikki/mihomo-alpha/Makefile
-      - id: pr
-        name: pr
-        uses: peter-evans/create-pull-request@v8
-        with:
-          path: OpenWrt-nikki
-          branch: dependabot/mihomo-alpha
-          commit-message: "chore: update mihomo-alpha to ${{ needs.get_latest_alpha_info.outputs.short_commit_sha }}"
-          title: "chore: update mihomo-alpha to ${{ needs.get_latest_alpha_info.outputs.short_commit_sha }}"
-          body: |
-            [Changelog](https://github.com/metacubex/mihomo/compare/${{ needs.get_current_alpha_info.outputs.pkg_source_version }}...${{  needs.get_latest_alpha_info.outputs.commit_sha }})
-  get_current_meta_info:
-    runs-on: ubuntu-latest
-    outputs:
-      pkg_source_version: ${{ steps.info.outputs.pkg_source_version }}
-    steps:
-      - id: checkout
-        name: checkout
-        uses: actions/checkout@v6
-        with:
-          repository: nikkinikki-org/OpenWrt-nikki
-          ref: main
-          path: OpenWrt-nikki
-      - id: info
-        name: info
+          base_sha="$(git rev-parse HEAD)"
+          git diff --check
+          if [ "$CHANGED" = true ]; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git -c commit.gpgsign=false commit -m "chore: update mihomo-meta to v$VERSION" \
+              -- mihomo-meta/Makefile .github/mihomo-release.json
+          fi
+          # Resume an incomplete release from its original source commit.
+          if git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}" >/dev/null 2>&1; then
+            if [ "$CHANGED" = true ]; then
+              echo '::error::The new release tag already exists; refusing to change its source.'
+              exit 1
+            fi
+            git diff --exit-code "refs/tags/$RELEASE_TAG" HEAD \
+              -- mihomo-meta/Makefile .github/mihomo-release.json
+            git checkout --detach "refs/tags/$RELEASE_TAG"
+          fi
+          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: build the release packages
+        if: steps.update.outputs.build == 'true'
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: x86_64-openwrt-25.12
+          FEEDNAME: nikki
+          PACKAGES: luci-app-nikki
+          INDEX: 1
+          NO_REFRESH_CHECK: true
+
+      - name: verify and archive the release
+        if: steps.update.outputs.build == 'true'
         run: |
-          echo "pkg_source_version=$(grep "PKG_SOURCE_VERSION:=" OpenWrt-nikki/mihomo-meta/Makefile | cut -d '=' -f 2)" >> $GITHUB_OUTPUT
-  get_latest_meta_info:
-    runs-on: ubuntu-latest
-    outputs:
-      latest_tag: ${{ steps.info.outputs.latest_tag }}
-      latest_version: ${{ steps.info.outputs.latest_version }}
-      checksum: ${{ steps.info.outputs.checksum }}
-    steps:
-      - id: checkout
-        name: checkout
-        uses: actions/checkout@v6
+          bash .github/scripts/verify-packages.sh bin/packages/x86_64/nikki
+          tar -czf nikki_x86_64-openwrt-25.12.tar.gz -C bin/packages/x86_64/nikki .
+          sha256sum nikki_x86_64-openwrt-25.12.tar.gz
+
+      - name: retain the verified archive
+        if: steps.update.outputs.build == 'true'
+        uses: actions/upload-artifact@v7
         with:
-          repository: 'MetaCubeX/mihomo'
-          ref: 'Meta'
-          path: 'mihomo'
-          fetch-tags: true
-      - id: info
-        name: info
+          name: nikki_x86_64-openwrt-25.12
+          path: nikki_x86_64-openwrt-25.12.tar.gz
+
+      - name: publish the verified source and release
+        if: steps.update.outputs.build == 'true' && github.ref_name == github.event.repository.default_branch
+        env:
+          RELEASE_TAG: ${{ steps.update.outputs.release_tag }}
+          VERSION: ${{ steps.update.outputs.version }}
+          CHANGED: ${{ steps.update.outputs.changed }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          BASE_SHA: ${{ steps.source.outputs.base_sha }}
         run: |
-          umask 0022
-          git -C mihomo config core.abbrev 8
-          latest_tag=$(git -C mihomo tag --sort=-v:refname | head -n 1)
-          latest_version=${latest_tag#v}
-          git -C mihomo checkout "$latest_tag"
-          commit_timestamp=$(git -C mihomo log -n 1 --format=%cd --date=format:%s)
-          pkg_name="mihomo-meta"
-          pkg_source_dir="${pkg_name}-${latest_version}"
-          pkg_source="${pkg_source_dir}.tar.gz"
-          mkdir -p "${pkg_source_dir}"
-          git -C mihomo archive --format=tar HEAD | tar -x -f - -C "${pkg_source_dir}"
-          tar --numeric-owner --owner=0 --group=0 --mode=a-s --sort=name --mtime="@${commit_timestamp}" -c "${pkg_source_dir}" | gzip -n -c > "${pkg_source}"
-          echo "latest_tag=$latest_tag" >> $GITHUB_OUTPUT
-          echo "latest_version=$latest_version" >> $GITHUB_OUTPUT
-          echo "checksum=$(sha256sum ${pkg_source} | cut -d ' ' -f 1)" >> $GITHUB_OUTPUT
-  update_meta:
-    needs:
-      - get_current_meta_info
-      - get_latest_meta_info
-    if: ${{ needs.get_current_meta_info.outputs.pkg_source_version != needs.get_latest_meta_info.outputs.latest_tag }}
-    runs-on: ubuntu-latest
-    steps:
-      - id: checkout
-        name: checkout
-        uses: actions/checkout@v6
-        with:
-          repository: nikkinikki-org/OpenWrt-nikki
-          ref: main
-          path: OpenWrt-nikki
-      - id: update
-        name: update
-        run: |
-          sed -i "s/PKG_VERSION:=.*/PKG_VERSION:=${{ needs.get_latest_meta_info.outputs.latest_version }}/" OpenWrt-nikki/mihomo-meta/Makefile
-          sed -i "s/PKG_SOURCE_VERSION:=.*/PKG_SOURCE_VERSION:=${{ needs.get_latest_meta_info.outputs.latest_tag }}/" OpenWrt-nikki/mihomo-meta/Makefile
-          sed -i "s/PKG_MIRROR_HASH:=.*/PKG_MIRROR_HASH:=${{ needs.get_latest_meta_info.outputs.checksum }}/" OpenWrt-nikki/mihomo-meta/Makefile
-          sed -i "s/PKG_BUILD_VERSION:=.*/PKG_BUILD_VERSION:=${{ needs.get_latest_meta_info.outputs.latest_tag }}/" OpenWrt-nikki/mihomo-meta/Makefile
-      - id: pr
-        name: pr
-        uses: peter-evans/create-pull-request@v8
-        with:
-          path: OpenWrt-nikki
-          branch: dependabot/mihomo-meta
-          commit-message: "chore: update mihomo-meta to ${{ needs.get_latest_meta_info.outputs.latest_tag }}"
-          title: "chore: update mihomo-meta to ${{ needs.get_latest_meta_info.outputs.latest_tag }}"
-          body: |
-            [Changelog](https://github.com/metacubex/mihomo/compare/${{ needs.get_current_meta_info.outputs.pkg_source_version }}...${{  needs.get_latest_meta_info.outputs.latest_tag }})
+          if [ "$CHANGED" = true ]; then
+            git fetch origin "$DEFAULT_BRANCH"
+            if [ "$(git rev-parse FETCH_HEAD)" != "$BASE_SHA" ]; then
+              echo '::error::The default branch changed during the build. Rerun to build the new source.'
+              exit 1
+            fi
+            git push origin "HEAD:refs/heads/$DEFAULT_BRANCH"
+          fi
+          printf 'OpenWrt 25.12 / x86_64\n\nMihomo: v%s\n\n自动检查稳定版并构建，保留本 fork 的 Nikki 功能和兼容处理。\n' \
+            "$VERSION" > "$RUNNER_TEMP/nikki-release-notes.md"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" nikki_x86_64-openwrt-25.12.tar.gz \
+              --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            # Publish only after the complete archive is uploaded successfully.
+            gh release create "$RELEASE_TAG" nikki_x86_64-openwrt-25.12.tar.gz \
+              --repo "$GITHUB_REPOSITORY" --target "$SOURCE_SHA" --draft \
+              --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/nikki-release-notes.md"
+          fi
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --draft=false --prerelease=false --latest
+          printf 'Published [%s](https://github.com/%s/releases/tag/%s).\n' \
+            "$RELEASE_TAG" "$GITHUB_REPOSITORY" "$RELEASE_TAG" >> "$GITHUB_STEP_SUMMARY"
