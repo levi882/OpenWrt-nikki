@@ -58,7 +58,7 @@ test "$(grep -c '#nikki scheduled restart' "$cron_file")" = 1 || fail 'Restart s
 test "$(grep -c '#nikki log scheduled clear' "$cron_file")" = 1 || fail 'Log schedule is missing or duplicated.'
 test "$(grep -c '#nikki china ip auto update' "$cron_file")" = 1 || fail 'China IP schedule is missing or duplicated.'
 grep -Fxq "$unrelated" "$cron_file" || fail 'An unrelated schedule was modified.'
-test "$(wc -l < "$restart_file")" = 2 || fail 'Cron did not restart once per refresh.'
+test "$(wc -l < "$restart_file")" = 0 || fail 'Refreshing schedules restarted cron.'
 
 scheduled_restart=0
 log_scheduled_clear=0
@@ -68,9 +68,9 @@ if grep -q '#nikki' "$cron_file"; then
 	fail 'Disabled schedules were not removed.'
 fi
 grep -Fxq "$unrelated" "$cron_file" || fail 'Disabling schedules removed an unrelated job.'
-test "$(wc -l < "$restart_file")" = 3 || fail 'Removing stale schedules did not reload cron.'
+test "$(wc -l < "$restart_file")" = 0 || fail 'Removing stale schedules restarted cron.'
 apply_cron
-test "$(wc -l < "$restart_file")" = 3 || fail 'An unchanged cron file triggered a redundant restart.'
+test "$(wc -l < "$restart_file")" = 0 || fail 'An unchanged cron file triggered a redundant restart.'
 
 china_ip_auto_update=1
 CHINA_IP_UPDATE_SH="$work_dir/missing-updater.sh"
@@ -78,6 +78,6 @@ apply_cron
 if grep -q '#nikki' "$cron_file"; then
 	fail 'A downgraded installation scheduled a missing China IP updater.'
 fi
-test "$(wc -l < "$restart_file")" = 3 || fail 'Missing updater caused an unnecessary cron restart.'
+test "$(wc -l < "$restart_file")" = 0 || fail 'Missing updater caused an unnecessary cron restart.'
 
 echo 'PASS: cron refresh preserves China IP schedules, avoids duplicates, and retains unrelated jobs.'
